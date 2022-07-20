@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 
 from user.models import User
-from user.utils import validate_password12
+from user.utils import validate_password12, get_user_login
 from user.tokens.token_serializers import MyTokenObtainPairSerializer
 
 
@@ -117,6 +117,7 @@ class LoginSerializer(serializers.ModelSerializer):
             email=email,
             password=password
         )
+        get_user_login(user)
         token = MyTokenObtainPairSerializer.get_token(user)
 
         data = {

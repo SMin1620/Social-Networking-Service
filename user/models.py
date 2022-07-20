@@ -68,8 +68,8 @@ class User(AbstractUser):
     class Meta:
         db_table = 'user'
         ordering = ['-id']
-        verbose_name = '회원들'
-        verbose_name_plural = '회원'
+        verbose_name = '회원'
+        verbose_name_plural = '회원들'
 
     def natural_key(self):
         return self.email

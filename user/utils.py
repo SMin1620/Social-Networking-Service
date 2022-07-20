@@ -1,5 +1,9 @@
+from datetime import timezone
+
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
+
+from user.models import User
 
 
 def validate_password12(password1, password2):
@@ -47,3 +51,13 @@ def validate_password12(password1, password2):
         raise serializers.ValidationError(_("password fields didn't match!"))
 
     return password1
+
+
+def get_user_login(user: User):
+    """
+    해당 유저의 마지막 로그인 시간 업데이트
+    """
+    user.las_login = timezone.now()
+    user.save()
+
+    return user
