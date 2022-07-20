@@ -6,6 +6,7 @@ from django.db import transaction
 
 from user.serializers import (
     RegisterSerializer,
+    LoginSerializer,
 )
 from user.models import User
 
@@ -38,6 +39,37 @@ class UserCreateViewSet(viewsets.GenericViewSet):
         return Response({
                 'message': '회원가입이 되었습니다.'
             }, status=status.HTTP_200_OK)
+
+
+class UserLoginViewSet(viewsets.GenericViewSet):
+    """
+    유저 로그인 뷰셋
+    """
+    def get_queryset(self):
+        return User.objects.all()
+
+    def get_serializer_class(self):
+        return LoginSerializer
+
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        """
+        로그인 로직
+        """
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid(raise_exception=True):
+            get_email = request.data.get('email')
+            get_token = serializer.validated_data
+
+            return Response({
+                'message': f'로그인 되었습니다. 반갑습니다 {get_email}님',
+                'token': get_token
+            }, status=status.HTTP_200_OK)
+
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 
