@@ -7,6 +7,8 @@ from django.db import transaction
 from user.serializers import (
     RegisterSerializer,
     LoginSerializer,
+    UserDetailSerializer,
+    UserUpdateDeleteSerializer,
 )
 from user.models import User
 
@@ -72,6 +74,35 @@ class UserLoginViewSet(viewsets.GenericViewSet):
         )
 
 
+class UserDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
+                                    mixins.UpdateModelMixin,
+                                    mixins.DestroyModelMixin,
+                                    viewsets.GenericViewSet):
+    """
+    유저 상세 조회
+    유저 정보 수정
+    유저 탈퇴
+    사용자 전용
+    """
+    lookup_url_kwarg = 'user_id'
+
+    def get_queryset(self):
+        return User.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return UserDetailSerializer
+        else:
+            return UserUpdateDeleteSerializer
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        유저 정보 부분 수정
+        사용자 전용
+        """
+        kwargs['partial'] = True
+
+        return self.update(request, *args, **kwargs)
 
 
 

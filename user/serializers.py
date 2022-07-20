@@ -127,9 +127,34 @@ class LoginSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserDetailSerializer(serializers.ModelSerializer):
+    """
+    유저 상세 조회 시리얼라이저
+    사용자 전용
+    """
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'email',
+            'username',
+            'gender',
+            'reg_date',
+            'update_date',
+            'last_login'
+        ]
 
 
-
-
+class UserUpdateDeleteSerializer(serializers.ModelSerializer):
+    """
+    유저 정보 수정, 삭제 시리얼라이저
+    사용자 전용
+    """
+    class Meta:
+        model = User
+        fields = [
+            'username',
+            'gender',
+        ]
 
 
