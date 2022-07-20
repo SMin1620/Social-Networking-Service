@@ -116,7 +116,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'user.User'
+# AUTH_USER_MODEL = 'user.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -142,7 +142,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'ko-kr'
 
-TIME_ZONE = 'Asis/Seoul'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
