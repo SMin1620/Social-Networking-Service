@@ -1,8 +1,10 @@
 from rest_framework import mixins, viewsets, status
+from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from django.db.models import Q, F
-from rest_framework.response import Response
+
 
 from article.models import (
     Article,
@@ -20,6 +22,7 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
                                viewsets.GenericViewSet):
     """
     게시글 조회 - 모든 사용자 접근 가능
+             - 해시태그 필터링
     게시글 생성 - 인가된 사용자만 접근 가능
     사용자 전용 뷰셋
     """
@@ -41,7 +44,15 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         return ArticleListCreateSerializer
 
-    @swagger_auto_schema(query_serializer=ArticleFilterSerializer)  # 스웨거 쿼리 필터 적용, 없어도 됨
+    # 스웨거에서 query 파라미터를 입력받을 수 있기 위해 추가함. 없애도 됨
+    param_hashtags = openapi.Parameter(
+        'hashtags',
+        openapi.IN_QUERY,
+        description='hashtags filter',
+        type=openapi.TYPE_STRING
+        )
+
+    @swagger_auto_schema(manual_parameters=[param_hashtags])
     def list(self, request, *args, **kwargs):
         """
         게시글 목록 조회
