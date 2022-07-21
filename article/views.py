@@ -1,7 +1,6 @@
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 
 from django.db.models import Q, F, Count
 
@@ -11,6 +10,13 @@ from article.models import (
 )
 from article.serializers import (
     ArticleListCreateSerializer,
+    ArticleDetailSerializer,
+    ArticleUpdateDeleteSerializer
+)
+from SNS.drf.swagger import (
+    param_hashtags,
+    param_search,
+    param_orderby,
 )
 
 
@@ -65,30 +71,6 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         return ArticleListCreateSerializer
 
-    # 스웨거에서 query 파라미터를 입력받을 수 있기 위해 추가함. 없애도 됨
-    param_hashtags = openapi.Parameter(
-        'hashtags',
-        openapi.IN_QUERY,
-        description='filter',
-        type=openapi.TYPE_STRING
-        )
-
-    # 스웨거에서 query 파라미터를 입력받을 수 있기 위해 추가함. 없애도 됨
-    param_search = openapi.Parameter(
-        'search',
-        openapi.IN_QUERY,
-        description='filter',
-        type=openapi.TYPE_STRING
-        )
-
-    # 스웨거에서 query 파라미터를 입력받을 수 있기 위해 추가함. 없애도 됨
-    param_orderby = openapi.Parameter(
-        'orderby',
-        openapi.IN_QUERY,
-        description='filter',
-        type=openapi.TYPE_STRING
-        )
-
     @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
     def list(self, request, *args, **kwargs):
         """
@@ -102,4 +84,33 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
         return Response(serializer.data)
 
 
+class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
+                                       mixins.UpdateModelMixin,
+                                       mixins.DestroyModelMixin,
+                                       viewsets.GenericViewSet):
+    """
+    게시글 상세 조회 - 모든 사용자 접근 가능
+    게시글 수정 - 본인만 접근 가능
+    게시글 삭제 - 본인만 접근 가능
+    사용자 전용 뷰셋
+    """
+    lookup_url_kwarg = 'article_id'
 
+    def get_queryset(self):
+        return Article.objects.all()
+
+    def get_serializer_class(self):
+        if self.request.method == 'GET':
+            return ArticleDetailSerializer
+        else:
+            return ArticleUpdateDeleteSerializer
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        게시글 부분 수정
+        본인만 접근 가능
+        사용자 전용
+        """
+        kwargs['partial'] = True
+
+        return self.update(request, *args, **kwargs)
