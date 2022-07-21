@@ -21,6 +21,7 @@ from SNS.drf.swagger import (
     param_search,
     param_orderby,
 )
+from SNS.drf.pagination import ArticlePageNumberPagination
 
 
 # Create your views here.
@@ -34,6 +35,7 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     사용자 전용 뷰셋
     """
     queryset = Article.objects.all()
+    pagination_class = ArticlePageNumberPagination
 
     def get_queryset(self):
         if self.action == 'list':
@@ -81,10 +83,7 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
         사용자 전용
         스웨거 데코레이터를 이용하기 위해서 선언함
         """
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-
-        return Response(serializer.data)
+        return super().list(request, *args, **kwargs)
 
 
 class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
@@ -111,12 +110,12 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['article_id']
         article = get_object_or_404(Article, pk=pk)
+        expire_time = 600  # 조회수 설정 시간 10분
+
         user = request.user
         if user.id is None:
             # 게스트 조회수
             pass
-
-        expire_time = 60           # 조회수 설정 시간 10분
 
         cache_value = cache.get('hitboard', '_')         # 캐싱을 이용해서 조회수 기능 구현
         response = Response(status=status.HTTP_200_OK)
@@ -130,9 +129,6 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         instance = self.get_object()
         serializer = self.get_serializer(instance)
         response.data = serializer.data
-        return response
-
-
         return response
 
 

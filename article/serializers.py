@@ -7,7 +7,6 @@ from article.models import (
     Article,
     ArticleLikedUser
 )
-from SNS.drf.pagination import ArticlePageNumberPagination
 
 
 class ArticleListCreateSerializer(serializers.ModelSerializer):
@@ -16,8 +15,6 @@ class ArticleListCreateSerializer(serializers.ModelSerializer):
     게시글 생성
     사용자 전용
     """
-    pagination_class = ArticlePageNumberPagination
-
     class Meta:
         model = Article
         fields = [
