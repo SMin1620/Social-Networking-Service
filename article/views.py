@@ -5,6 +5,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from django.db.models import Q, F, Count
 from django.shortcuts import get_object_or_404
+from django.core.cache import cache
 
 from article.models import (
     Article,
@@ -107,6 +108,34 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         else:
             return ArticleUpdateDeleteSerializer
 
+    def retrieve(self, request, *args, **kwargs):
+        pk = kwargs['article_id']
+        article = get_object_or_404(Article, pk=pk)
+        user = request.user
+        if user.id is None:
+            # 게스트 조회수
+            pass
+
+        expire_time = 60           # 조회수 설정 시간 10분
+
+        cache_value = cache.get('hitboard', '_')         # 캐싱을 이용해서 조회수 기능 구현
+        response = Response(status=status.HTTP_200_OK)
+
+        if f'_{pk}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
+            cache_value += f'{pk}_'
+            cache.set('hitboard', cache_value, expire_time)
+            article.hits += 1
+            article.save()
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        response.data = serializer.data
+        return response
+
+
+        return response
+
+
     def partial_update(self, request, *args, **kwargs):
         """
         게시글 부분 수정
@@ -124,7 +153,7 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         사용자 전용
         """
         pk = kwargs['article_id']
-        user = self.request.user
+        user = request.user
         article = get_object_or_404(Article, pk=pk)
 
         if article.article_liked_user.filter(pk=pk).exists():   # 해당 게시글에 유저가 이미 좋아요를 했다면,
