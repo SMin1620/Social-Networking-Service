@@ -4,10 +4,11 @@ from django.db import models
 
 from user.models import User
 from tag.models import Tag
+from SNS.models import SoftDeleteModel
 
 
 # Create your models here.
-class Article(models.Model):
+class Article(SoftDeleteModel):
     title = models.CharField('제목', max_length=50)
     content = models.TextField('내용')
     hashtags = models.TextField('태그 내용')

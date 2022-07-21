@@ -15,18 +15,27 @@ class ArticleListCreateSerializer(serializers.ModelSerializer):
     게시글 생성
     사용자 전용
     """
+    # title = serializers.CharField(write_only=True)
+    # content = serializers.CharField(write_only=True)
+    # hashtags = serializers.CharField(write_only=True)
+
     class Meta:
         model = Article
         fields = [
             'title',
             'hashtags',
+            'content',
+            'user',
+            'article_liked_user'
+        ]
+        read_only_fields = [
             'user',
             'article_liked_user'
         ]
         write_only_fields = [
             'title',
+            'hashtags',
             'content',
-            'hashtags'
         ]
 
 
@@ -45,7 +54,8 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'content',
             'hashtags',
             'hits',
-            'like_count'
+            'like_count',
+            'delete_date',
         ]
 
     def get_like_count(self, obj):

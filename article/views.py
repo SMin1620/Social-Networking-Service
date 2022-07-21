@@ -134,7 +134,6 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         response.data = serializer.data
         return response
 
-
     def partial_update(self, request, *args, **kwargs):
         """
         게시글 부분 수정
