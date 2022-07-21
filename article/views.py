@@ -117,14 +117,17 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
             # 게스트 조회수
             pass
 
-        cache_value = cache.get('hitboard', '_')         # 캐싱을 이용해서 조회수 기능 구현
+        cache_value = cache.get(f'article-{pk}', '_')         # 캐싱을 이용해서 조회수 기능 구현
         response = Response(status=status.HTTP_200_OK)
 
-        if f'_{pk}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
-            cache_value += f'{pk}_'
-            cache.set('hitboard', cache_value, expire_time)
+        print('1', article.hits, cache_value)
+
+        if f'_{user.id}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
+            cache_value += f'{user.id}_'
+            cache.set(f'article-{pk}', cache_value, expire_time)
             article.hits += 1
             article.save()
+            print('2', article.hits, cache_value)
 
         instance = self.get_object()
         serializer = self.get_serializer(instance)
