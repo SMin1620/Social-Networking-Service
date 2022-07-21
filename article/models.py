@@ -12,10 +12,15 @@ class Article(models.Model):
     content = models.TextField('내용')
     hashtags = models.TextField('태그 내용')
 
+    hits = models.PositiveIntegerField('조회수', default=0)
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tags = models.ManyToManyField(Tag, blank=True)
     article_liked_user = models.ManyToManyField(User, through='article.ArticleLikedUser',
                                                 related_name='liked_article')
+
+    created_at = models.DateTimeField('등록 날짜', auto_now_add=True)
+    updated_at = models.DateTimeField('수정 날짜', auto_now=True)
 
     # 사진도 추가해야함. (확장)
 
@@ -52,7 +57,7 @@ class Article(models.Model):
 
     class Meta:
         db_table = 'article'
-        ordering = ['-id']
+        ordering = ['-created_at']
         verbose_name = '게시글'
         verbose_name_plural = '게시글'
 
@@ -61,15 +66,15 @@ class Article(models.Model):
 
 
 class ArticleLikedUser(models.Model):
-    reg_date = models.DateTimeField('등록 날짜', auto_now_add=True)
-    update_date = models.DateTimeField('수정 날짜', auto_now=True)
+    created_at = models.DateTimeField('등록 날짜', auto_now_add=True)
+    updated_at = models.DateTimeField('수정 날짜', auto_now=True)
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'like'
-        ordering = ['-id']
+        ordering = ['-created_at']
         verbose_name = '좋아요'
         verbose_name_plural = '좋아요'
 

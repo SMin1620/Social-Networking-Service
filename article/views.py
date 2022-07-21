@@ -3,8 +3,7 @@ from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
-from django.db.models import Q, F
-
+from django.db.models import Q, F, Count
 
 from article.models import (
     Article,
@@ -26,12 +25,22 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     사용자 전용 뷰셋
     """
     queryset = Article.objects.all()
+
     def get_queryset(self):
         if self.action == 'list':
-            hashtag = self.request.GET.get('hashtags')  # 해시태그 입력
-            search = self.request.GET.get('search')     # 검색 단어 입력
+            hashtag = self.request.GET.get('hashtags', '')             # 해시태그 입력
+            search = self.request.GET.get('search', '')                # 검색 단어 입력
+            orderby = self.request.GET.get('orderby', '-created_at')   # 정렬 단어 입력
 
             hashtags = hashtag and hashtag.split(' ') and hashtag.split(',')    # 해시태그 필터
+            set_order_by = [
+                'created_at',
+                '-created_at',
+                'hits',
+                '-hits',
+                'article_liked_user',
+                '-article_liked_user'
+            ]
 
             condition = Q()
             if hashtags:    # 입력받은 해시태그 파라미터가 있다면,
@@ -45,7 +54,9 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
                     Q(content__icontains=search),
                     Q.OR
                 )
-            queryset = Article.objects.filter(condition).distinct()
+            if orderby in set_order_by:
+                queryset = Article.objects.filter(condition).order_by(orderby).distinct()
+
             return queryset
 
         else:
@@ -70,7 +81,15 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
         type=openapi.TYPE_STRING
         )
 
-    @swagger_auto_schema(manual_parameters=[param_hashtags, param_search])
+    # 스웨거에서 query 파라미터를 입력받을 수 있기 위해 추가함. 없애도 됨
+    param_orderby = openapi.Parameter(
+        'orderby',
+        openapi.IN_QUERY,
+        description='filter',
+        type=openapi.TYPE_STRING
+        )
+
+    @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
     def list(self, request, *args, **kwargs):
         """
         게시글 목록 조회
