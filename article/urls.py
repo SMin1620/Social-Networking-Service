@@ -15,9 +15,13 @@ article_detail_update_delete = ArticleDetailUpdateDeleteViewSet.as_view({
     'patch': 'partial_update',
     'delete': 'destroy',
 })
+article_like = ArticleDetailUpdateDeleteViewSet.as_view({
+    'post': 'like'
+})
 
 
 urlpatterns = [
     path('', article_list_create, name='article list create'),
     path('<int:article_id>/', article_detail_update_delete, name='article detail update delete'),
+    path('<int:article_id>/like/', article_like, name='article like'),
 ]

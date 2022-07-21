@@ -1,4 +1,4 @@
-from datetime import timezone
+from datetime import datetime
 
 from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
@@ -57,7 +57,7 @@ def get_user_login(user: User):
     """
     해당 유저의 마지막 로그인 시간 업데이트
     """
-    user.las_login = timezone.now()
+    user.las_login = datetime.now()
     user.save()
 
     return user

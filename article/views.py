@@ -1,8 +1,10 @@
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
+from rest_framework.decorators import action
 from drf_yasg.utils import swagger_auto_schema
 
 from django.db.models import Q, F, Count
+from django.shortcuts import get_object_or_404
 
 from article.models import (
     Article,
@@ -114,3 +116,21 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         kwargs['partial'] = True
 
         return self.update(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, *args, **kwargs):
+        """
+        좋아요 추가, 삭제 - 인가된 사용자만 가능
+        사용자 전용
+        """
+        pk = kwargs['article_id']
+        user = self.request.user
+        article = get_object_or_404(Article, pk=pk)
+
+        if article.article_liked_user.filter(pk=pk).exists():   # 해당 게시글에 유저가 이미 좋아요를 했다면,
+            article.article_liked_user.remove(user.id)          # 좋아요 취소
+        else:                                                   # 해당 게시글에 유저가 좋아요를 하지 않았다면,
+            article.article_liked_user.add(user.id)             # 좋아요 추가
+
+        return Response(status=status.HTTP_200_OK)
+
