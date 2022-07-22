@@ -1,3 +1,5 @@
+import socket
+
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -113,17 +115,16 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         article = get_object_or_404(Article, pk=pk)
         expire_time = 600  # 조회수 설정 시간 10분
 
-        user = request.user
-        if user.id is None:
-            # 게스트 조회수
-            pass
+        user = request.user.id
+        if user is None:
+            user = socket.gethostbyname(socket.gethostname())
 
-        cache_value = cache.get(f'article-{pk}', '_')         # 캐싱을 이용해서 조회수 기능 구현
+        cache_value = cache.get(f'user-{user}', '_')         # 캐싱을 이용해서 조회수 기능 구현
         response = Response(status=status.HTTP_200_OK)
 
-        if f'_{user.id}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
-            cache_value += f'{user.id}_'
-            cache.set(f'article-{pk}', cache_value, expire_time)
+        if f'_{pk}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
+            cache_value += f'{pk}_'
+            cache.set(f'user-{user}', cache_value, expire_time)
             article.hits += 1
             article.save()
 
