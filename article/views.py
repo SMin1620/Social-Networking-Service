@@ -14,7 +14,8 @@ from article.models import (
 from article.serializers import (
     ArticleListCreateSerializer,
     ArticleDetailSerializer,
-    ArticleUpdateDeleteSerializer
+    ArticleUpdateDeleteSerializer,
+    ArticleRestoreSerializer
 )
 from SNS.drf.swagger import (
     param_hashtags,
@@ -120,14 +121,11 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         cache_value = cache.get(f'article-{pk}', '_')         # 캐싱을 이용해서 조회수 기능 구현
         response = Response(status=status.HTTP_200_OK)
 
-        print('1', article.hits, cache_value)
-
         if f'_{user.id}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
             cache_value += f'{user.id}_'
             cache.set(f'article-{pk}', cache_value, expire_time)
             article.hits += 1
             article.save()
-            print('2', article.hits, cache_value)
 
         instance = self.get_object()
         serializer = self.get_serializer(instance)
@@ -160,4 +158,38 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
             article.article_liked_user.add(user.id)             # 좋아요 추가
 
         return Response(status=status.HTTP_200_OK)
+
+
+class ArticleRestoreViewSet(mixins.ListModelMixin,
+                            mixins.RetrieveModelMixin,
+                            viewsets.GenericViewSet):
+    """
+    삭제한 게시글 목록 조회
+    삭제한 게시글 상세 조회
+    게시글 삭제 복구 뷰셋
+    """
+    lookup_url_kwarg = 'article_id'
+
+    def get_queryset(self):
+        return Article.deleted_objects.all()
+
+    def get_serializer_class(self):
+        return ArticleRestoreSerializer
+
+    @action(detail=True, methods=['patch'])
+    def restore(self, request, *args, **kwargs):
+        """
+        삭제된 게시글 복구
+        사용자 전용
+        """
+        pk = kwargs['article_id']
+        article = Article.deleted_objects.get(pk=pk)
+        article.restore()
+
+        return Response(status=status.HTTP_200_OK)
+
+
+
+
+
 

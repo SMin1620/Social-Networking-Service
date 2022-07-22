@@ -7,6 +7,7 @@ from article.models import (
     Article,
     ArticleLikedUser
 )
+from user.serializers import UserSerializer
 
 
 class ArticleListCreateSerializer(serializers.ModelSerializer):
@@ -86,3 +87,27 @@ class ArticleUpdateDeleteSerializer(serializers.ModelSerializer):
         if attrs['hashtags'] is None:
             raise ValidationError(_('No hashtags'))
 
+
+class ArticleRestoreSerializer(serializers.ModelSerializer):
+    """
+    게시글 삭제 복구
+    사용자 전용
+    """
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Article
+        fields = [
+            'id',
+            'title',
+            'hashtags',
+            'user',
+            'delete_date'
+        ]
+        read_only_fields = [
+            'id',
+            'title',
+            'hashtags',
+            'user',
+            'delete_date'
+        ]

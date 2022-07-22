@@ -159,3 +159,16 @@ class UserUpdateDeleteSerializer(serializers.ModelSerializer):
         ]
 
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'email',
+            'username'
+        ]
+        read_only_fields = [
+            'id',
+            'email',
+            'username'
+        ]
