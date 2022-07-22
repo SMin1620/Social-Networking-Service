@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='등록 날짜')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='수정 날짜')),
                 ('article', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='article.article')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL, null=True)),
             ],
             options={
                 'verbose_name': '좋아요',

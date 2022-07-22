@@ -3,11 +3,18 @@ import socket
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from drf_yasg.utils import swagger_auto_schema
+from rest_framework.permissions import (
+    IsAdminUser,
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 
+from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q, F, Count
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
+from django.db import transaction
 
 from article.models import (
     Article,
@@ -25,6 +32,7 @@ from SNS.drf.swagger import (
     param_orderby,
 )
 from SNS.drf.pagination import ArticlePageNumberPagination
+from SNS.drf.permissions import IsOwnerArticle
 
 
 # Create your views here.
@@ -38,7 +46,7 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     사용자 전용 뷰셋
     """
     queryset = Article.objects.all()
-    pagination_class = ArticlePageNumberPagination
+    serializer_class = ArticleListCreateSerializer
 
     def get_queryset(self):
         if self.action == 'list':
@@ -79,6 +87,14 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         return ArticleListCreateSerializer
 
+    def get_permissions(self):
+        permission_classes = []
+        if self.action == 'list':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsOwnerArticle]
+        return [permission() for permission in permission_classes]
+
     @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
     def list(self, request, *args, **kwargs):
         """
@@ -87,6 +103,13 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
         스웨거 데코레이터를 이용하기 위해서 선언함
         """
         return super().list(request, *args, **kwargs)
+
+    @transaction.atomic()
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
 
 class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
@@ -109,6 +132,14 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
             return ArticleDetailSerializer
         else:
             return ArticleUpdateDeleteSerializer
+
+    def get_permissions(self):
+        permission_classes = []
+        if self.action == 'retrieve':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsOwnerArticle]
+        return [permission() for permission in permission_classes]
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['article_id']
@@ -170,6 +201,7 @@ class ArticleRestoreViewSet(mixins.ListModelMixin,
     게시글 삭제 복구 뷰셋
     """
     lookup_url_kwarg = 'article_id'
+    permission_classes = (IsOwnerArticle, )
 
     def get_queryset(self):
         return Article.deleted_objects.all()

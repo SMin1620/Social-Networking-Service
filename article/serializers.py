@@ -16,24 +16,13 @@ class ArticleListCreateSerializer(serializers.ModelSerializer):
     게시글 생성
     사용자 전용
     """
-    # title = serializers.CharField(write_only=True)
-    # content = serializers.CharField(write_only=True)
-    # hashtags = serializers.CharField(write_only=True)
+    user = serializers.ReadOnlyField(source='user.email')
 
     class Meta:
         model = Article
         fields = [
-            'title',
-            'hashtags',
-            'content',
             'user',
-            'article_liked_user'
-        ]
-        read_only_fields = [
-            'user',
-            'article_liked_user'
-        ]
-        write_only_fields = [
+            'id',
             'title',
             'hashtags',
             'content',

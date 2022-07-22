@@ -15,7 +15,7 @@ class Article(SoftDeleteModel):
 
     hits = models.PositiveIntegerField('조회수', default=0)
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     tags = models.ManyToManyField(Tag, blank=True)
     article_liked_user = models.ManyToManyField(User, through='article.ArticleLikedUser',
                                                 related_name='liked_article')
