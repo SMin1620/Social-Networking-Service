@@ -35,7 +35,7 @@ class ReComment(models.Model):
     comment = models.ForeignKey(Comment, on_delete=models.DO_NOTHING, blank=True)
 
     class Meta:
-        db_table = 'comment'
+        db_table = 'recomment'
         ordering = ['-id']
         verbose_name = '대댓글'
         verbose_name_plural = '대댓글들'

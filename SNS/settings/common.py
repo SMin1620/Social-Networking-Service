@@ -56,6 +56,7 @@ INSTALLED_APPS += [
     'user',
     'article',
     'tag',
+    'comment',
 ]
 
 # 서드파티

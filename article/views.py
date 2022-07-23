@@ -47,6 +47,7 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     """
     queryset = Article.objects.all()
     serializer_class = ArticleListCreateSerializer
+    pagination_class = ArticlePageNumberPagination
 
     def get_queryset(self):
         if self.action == 'list':
