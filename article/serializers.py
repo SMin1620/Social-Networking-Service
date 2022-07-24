@@ -8,6 +8,7 @@ from article.models import (
     ArticleLikedUser
 )
 from user.serializers import UserSerializer
+from comment.serializers import CommentSerializer
 
 
 class ArticleListCreateSerializer(serializers.ModelSerializer):
@@ -35,6 +36,7 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     사용자 전용
     """
     like_count = serializers.SerializerMethodField(read_only=True)
+    comments = serializers.SerializerMethodField()
 
     class Meta:
         model = Article
@@ -46,10 +48,15 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'hits',
             'like_count',
             'delete_date',
+            'comments',
         ]
 
     def get_like_count(self, obj):
         return obj.article_liked_user.count()
+
+    def get_comments(self, obj):
+        serializer = CommentSerializer(obj.comments, many=True)
+        return serializer.data
 
 
 class ArticleUpdateDeleteSerializer(serializers.ModelSerializer):

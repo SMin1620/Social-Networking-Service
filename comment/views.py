@@ -35,6 +35,14 @@ class CommentListrCreateViewSet(mixins.ListModelMixin,
         else:
             return CommentCreateSerializer
 
+    def get_permissions(self):
+        permission_classes = []
+        if self.action == 'list':
+            permission_classes = [AllowAny]
+        else:
+            permission_classes = [IsOwnerArticle]
+        return [permission() for permission in permission_classes]
+
     @transaction.atomic()
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)

@@ -11,7 +11,7 @@ class Comment(models.Model):
     created_at = models.DateTimeField('생성 날짜', auto_now_add=True)
     updated_at = models.DateTimeField('수정 날짜', auto_now=True)
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True)
 
     class Meta:
@@ -32,7 +32,7 @@ class ReComment(models.Model):
 
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True)
-    comment = models.ForeignKey(Comment, on_delete=models.DO_NOTHING, blank=True)
+    comment = models.ForeignKey(Comment, on_delete=models.DO_NOTHING, blank=True, related_name='re_comments')
 
     class Meta:
         db_table = 'recomment'
