@@ -16,6 +16,7 @@ from comment.serializers import (
     CommentUpdateDeleteSerializer,
     ReCommentSerializer,
     ReCommentListCreateSerializer,
+    ReCommentUpdateDeleteSerializer,
 )
 from SNS.drf.permissions import IsOwnerOrReadOnly
 from article.models import Article
@@ -109,4 +110,39 @@ class ReCommentListCreateViewSet(mixins.ListModelMixin,
         comment_id = self.kwargs['comment_id']
         comment = get_object_or_404(Comment, pk=comment_id)
         serializer.save(user=self.request.user, comment=comment)
+
+
+class ReCommentUpdateDeleteViewSet(mixins.UpdateModelMixin,
+                                   mixins.DestroyModelMixin,
+                                   viewsets.GenericViewSet):
+    """
+    대댓글 수정
+    대댓글 삭제
+    뷰셋
+    """
+    lookup_url_kwarg = 'recomment_id'
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        return ReComment.objects.all()
+
+    def get_serializer_class(self):
+        return ReCommentUpdateDeleteSerializer
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        댓글 부분 수정
+        본인만 접근 가능
+        사용자 전용
+        """
+        kwargs['partial'] = True
+
+        return self.update(request, *args, **kwargs)
+
+
+
+
+
+
+
 

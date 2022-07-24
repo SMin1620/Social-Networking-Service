@@ -91,3 +91,17 @@ class ReCommentListCreateSerializer(serializers.ModelSerializer):
             'user',
             'comment',
         ]
+
+
+class ReCommentUpdateDeleteSerializer(serializers.ModelSerializer):
+    """
+    대댓글 수정
+    대댓글 삭제
+    시리얼라이저
+    사용자 전용
+    """
+    class Meta:
+        model = ReComment
+        fields = [
+            'content'
+        ]
