@@ -81,13 +81,13 @@ class ReCommentListCreateSerializer(serializers.ModelSerializer):
     시리얼라이저
     사용자 전용
     """
+    user = serializers.ReadOnlyField(source='user.username')
     comment = serializers.ReadOnlyField(source='comment.id')
 
     class Meta:
         model = ReComment
         fields = [
-            'id',
             'content',
-            'created_at',
+            'user',
             'comment',
         ]

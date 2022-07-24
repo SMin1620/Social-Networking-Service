@@ -81,7 +81,6 @@ class CommentUpdateDeleteViewSet(mixins.UpdateModelMixin,
 
 
 class ReCommentListCreateViewSet(mixins.ListModelMixin,
-                                 mixins.RetrieveModelMixin,
                                  mixins.CreateModelMixin,
                                  viewsets.GenericViewSet):
     """
@@ -96,18 +95,18 @@ class ReCommentListCreateViewSet(mixins.ListModelMixin,
     def get_queryset(self):
         return ReComment.objects.all()
 
-    # def get_serializer_class(self):
-    #     if self.action == 'list':
-    #         return ReCommentSerializer
-    #     else:
-    #         return ReCommentListCreateSerializer
     def get_serializer_class(self):
-        return ReCommentSerializer
+        if self.request.method == 'GET':
+            return ReCommentSerializer
+        else:
+            return ReCommentListCreateSerializer
 
     @transaction.atomic()
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        comment_id = self.kwargs['comment_id']
+        comment = get_object_or_404(Comment, pk=comment_id)
+        serializer.save(user=self.request.user, comment=comment)
 

@@ -97,7 +97,7 @@ REST_FRAMEWORK = {
 
 # simple jwt 엑세스키와 리프레시키의 수명 설정
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=60 * 10),  # 이 부분과
+    'ACCESS_TOKEN_LIFETIME': timedelta(seconds=60 * 60),  # 이 부분과
     'REFRESH_TOKEN_LIFETIME': timedelta(seconds=60 * 60 * 24 * 30),  # 이 부분만 고치면 됩니다.
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,

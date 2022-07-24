@@ -19,10 +19,13 @@ comment_update_delete = CommentUpdateDeleteViewSet.as_view({
     'delete': 'destroy',
 })
 
-re_comment_list_create = ReCommentListCreateViewSet.as_view({
+re_comment_list = ReCommentListCreateViewSet.as_view({
     'get': 'list',
-    'post': 'create'
+    'post': 'create',
 })
+# re_comment_create = ReCommentListCreateViewSet.as_view({
+#
+# })
 
 
 
@@ -30,5 +33,6 @@ urlpatterns = [
     path('', comment_list, name='comment list'),
     path('<article_id>/comment/', comment_create, name='comment create'),
     path('<comment_id>/', comment_update_delete, name='comment update delete'),
-    path('<comment_id>/recomment/', re_comment_list_create, name='recomment list'),
+    path('<comment_id>/recomment/', re_comment_list, name='recomment list'),
+    # path('<comment_id>/recomment/', re_comment_create, name='recomment create'),
 ]

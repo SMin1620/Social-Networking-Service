@@ -30,7 +30,6 @@ class ReComment(models.Model):
     created_at = models.DateTimeField('생성 날짜', auto_now_add=True)
     updated_at = models.DateTimeField('수정 날짜', auto_now=True)
 
-    article = models.ForeignKey(Article, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING, blank=True)
     comment = models.ForeignKey(Comment, on_delete=models.DO_NOTHING, blank=True, related_name='re_comments')
 
@@ -41,7 +40,7 @@ class ReComment(models.Model):
         verbose_name_plural = '대댓글들'
 
     def __str__(self):
-        return f'{self.id} // Article : {self.article}, User : {self.user} // Comment : {self.comment}'
+        return f'{self.id} // User : {self.user} // Comment : {self.comment}'
 
 
 
