@@ -32,7 +32,7 @@ from SNS.drf.swagger import (
     param_orderby,
 )
 from SNS.drf.pagination import ArticlePageNumberPagination
-from SNS.drf.permissions import IsOwnerArticle
+from SNS.drf.permissions import IsOwnerOrReadOnly
 
 
 # Create your views here.
@@ -48,6 +48,7 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     queryset = Article.objects.all()
     serializer_class = ArticleListCreateSerializer
     pagination_class = ArticlePageNumberPagination
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         if self.action == 'list':
@@ -88,14 +89,6 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         return ArticleListCreateSerializer
 
-    def get_permissions(self):
-        permission_classes = []
-        if self.action == 'list':
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsOwnerArticle]
-        return [permission() for permission in permission_classes]
-
     @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
     def list(self, request, *args, **kwargs):
         """
@@ -124,6 +117,7 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
     사용자 전용 뷰셋
     """
     lookup_url_kwarg = 'article_id'
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         return Article.objects.all()
@@ -133,14 +127,6 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
             return ArticleDetailSerializer
         else:
             return ArticleUpdateDeleteSerializer
-
-    def get_permissions(self):
-        permission_classes = []
-        if self.action == 'retrieve':
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [IsOwnerArticle]
-        return [permission() for permission in permission_classes]
 
     def retrieve(self, request, *args, **kwargs):
         pk = kwargs['article_id']
@@ -202,7 +188,7 @@ class ArticleRestoreViewSet(mixins.ListModelMixin,
     게시글 삭제 복구 뷰셋
     """
     lookup_url_kwarg = 'article_id'
-    permission_classes = (IsOwnerArticle, )
+    permission_classes = [IsOwnerOrReadOnly]
 
     def get_queryset(self):
         return Article.deleted_objects.all()
