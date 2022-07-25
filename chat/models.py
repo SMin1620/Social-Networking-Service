@@ -4,7 +4,7 @@ from user.models import User
 
 
 # Create your models here.
-class Room(models.Molel):
+class Room(models.Model):
     title = models.CharField('채팅방 이름', max_length=100, blank=True, default='')
     user = models.ManyToManyField(User)
 

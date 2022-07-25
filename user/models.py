@@ -85,3 +85,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.id}, {self.email}, {self.username}'
+
+
+class FollowRelation(models.Model):
+    follower = models.OneToOneField(User, on_delete=models.CASCADE, related_name='follower')
+    followee = models.ManyToManyField(User, related_name='followee')
+
+    class Meta:
+        db_table = 'follow'
+
+    def __str__(self):
+        return f'Follower : {self.follower} // Followee : {self.followee}'
