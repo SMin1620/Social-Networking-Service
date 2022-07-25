@@ -3,7 +3,7 @@ from rest_framework import serializers
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 
-from user.models import User
+from user.models import User, FollowRelation
 from user.utils import validate_password12, get_user_login
 from user.tokens.token_serializers import MyTokenObtainPairSerializer
 
@@ -128,11 +128,33 @@ class LoginSerializer(serializers.ModelSerializer):
         return data
 
 
+class UserFollowerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowRelation
+        fields = [
+            'follower',
+            'followee',
+        ]
+        read_only_fields = [
+            'follower',
+            'followee',
+        ]
+
+
 class UserDetailSerializer(serializers.ModelSerializer):
     """
     유저 상세 조회 시리얼라이저
     사용자 전용
     """
+    follower = serializers.SerializerMethodField(read_only=True)
+    followee = serializers.SerializerMethodField(read_only=True)
+
+    def get_follower(self, obj):
+        return obj.follower.count()
+
+    def get_followee(self, obj):
+        return obj.followee.count()
+
     class Meta:
         model = User
         fields = [
@@ -140,6 +162,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'email',
             'username',
             'gender',
+            'follower',
+            'followee',
             'reg_date',
             'update_date',
             'last_login'
@@ -167,3 +191,4 @@ class UserSerializer(serializers.ModelSerializer):
             'email',
             'username'
         ]
+

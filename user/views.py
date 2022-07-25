@@ -2,15 +2,17 @@ from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
+from django.shortcuts import get_object_or_404
 
 from user.serializers import (
     RegisterSerializer,
     LoginSerializer,
     UserDetailSerializer,
     UserUpdateDeleteSerializer,
+    UserFollowerSerializer,
 )
-from user.models import User
+from user.models import User, FollowRelation
 
 
 # Create your views here.
@@ -92,6 +94,8 @@ class UserDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return UserDetailSerializer
+        elif self.request.method == 'POST':
+            return UserFollowerSerializer
         else:
             return UserUpdateDeleteSerializer
 
@@ -103,6 +107,37 @@ class UserDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         kwargs['partial'] = True
 
         return self.update(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'])
+    def follow(self, request, *args, **kwargs):
+        user_id = kwargs['user_id']
+        you = get_object_or_404(User, pk=user_id)
+        me = request.user
+
+        try:
+            if you == me:
+                raise IntegrityError
+
+            if you.follow.filter(pk=me.id).exists():
+                you.follow.remove(me.id)
+                return Response({
+                    'message': '언팔로우 했습니다.'
+                }, status=status.HTTP_200_OK)
+            else:
+                you.follow.add(me.id)
+                return Response({
+                    'message': '팔로우 했습니다.'
+                }, status=status.HTTP_200_OK)
+        except IntegrityError:
+            return Response({
+                'message': '자신한테는 팔로우를 할 수 없습니다.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
 
 
 
