@@ -57,6 +57,7 @@ INSTALLED_APPS += [
     'article',
     'tag',
     'comment',
+    'chat',
 ]
 
 # 서드파티
