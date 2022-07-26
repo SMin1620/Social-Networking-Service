@@ -24,9 +24,7 @@
 - [API Doc](#-API-Doc)
 - [실행방법](#실행-방법)
 - [배포](#-배포)
-- [swagger](#swagger)  
-- [테스트 케이스](#테스트-케이스)  
-- [기술 스택](#기술-스택) 
+- [swagger](#swagger)   
 
 
 <br><br>
@@ -709,3 +707,44 @@
     }
     ```
 </details>
+
+<br/>
+<br/>
+
+## 실행 방법
+
+```
+📌 Dependency
+
+# 로컬에서 바로 서버 구동
+pip install -r requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+
+# 도커 실행 (prod branch)
+pip install docker
+pip install docker-compose
+docker-compose up -d
+
+(장고 서버는 15초 대기 시간을 걸었습니다.)
+```
+
+<br/>
+
+## 🔥 배포
+
+docker를 이용해 프로젝트 api를 컨테이너화 하여 GCP에 배포했습니다  
+
+[API Link]()
+
+GCP 배포, 테스트 및 동작을 확인하였으며, 비용 등의 이유로 현재는 접속불가할 수 있습니다.
+<br><br>
+
+
+
+## swagger
+
+[API 명세서 (Swagger)]()
+
+<br><br>
