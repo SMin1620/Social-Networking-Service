@@ -54,6 +54,9 @@ class User(AbstractUser):
     username = models.CharField('이름', max_length=50)
     gender = models.CharField('성별', max_length=1, blank=True, choices=GenderChoices.choices)
 
+    follow = models.ManyToManyField('self', symmetrical=False, through='user.FollowRelation',
+                                    related_name='follow_user')
+
     reg_date = models.DateTimeField('생성 날짜', auto_now_add=True)
     update_date = models.DateTimeField('수정 날짜', auto_now=True)
 
@@ -68,8 +71,8 @@ class User(AbstractUser):
     class Meta:
         db_table = 'user'
         ordering = ['-id']
-        verbose_name = '회원들'
-        verbose_name_plural = '회원'
+        verbose_name = '회원'
+        verbose_name_plural = '회원들'
 
     def natural_key(self):
         return self.email
@@ -85,3 +88,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.id}, {self.email}, {self.username}'
+
+
+class FollowRelation(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follower', default=0)
+    followee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followee', default=0)
+
+    class Meta:
+        db_table = 'follow'
+
+    def __str__(self):
+        return f'Follower : {self.follower.email} // Followee : {self.followee.email}'
