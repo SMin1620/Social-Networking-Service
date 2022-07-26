@@ -207,7 +207,43 @@
      미구현
      
   #### 검색 엔진
-     미구현
+  ```
+  검색 엔진으로 엘라스틱 서치를 사용하였습니다. 인덱스 색인 및 매핑 작업으로 하고 title, content, hashtags를 검색 가능하도록 설정합니다.
+  그리고 로그 스태시로 mysql과 연동하게 하고, 키바나로 검색 단어를 분석 및 시각화 작업을 합니다.
+  ```
+  ```
+  {
+  "properties": {
+    "id": {
+      "type": "long"
+    },
+    "title": {
+      "type": "keyword",
+      "copy_to": ["title_nori"]
+    },
+    "title_nori": {
+      "type": "text",
+      "analyzer": "nori_analyzer"
+    },
+    "content": {
+      "type": "keyword",
+      "copy_to": ["content_nori"]
+    },
+    "content_nori": {
+      "type": "text",
+      "analyzer": "nori_analyzer"
+    },
+    "hashtags": {
+      "type": "keyword",
+      "copy_to": ["hashtags_nori"]
+    },
+    "hashtags_nori": {
+      "type": "text",
+      "analyzer": "nori_analyzer"
+    }
+  }
+```
+     
 
 ## 👀 API Doc
 </details>
