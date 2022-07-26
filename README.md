@@ -195,6 +195,16 @@
     
   
   ### 🔥 선택사항
+  #### migration 파일에 더미 데이터 삽입
+<a align='left'>
+  <img src="https://user-images.githubusercontent.com/81574795/180950620-d47fff73-e475-4466-bc38-05825784679f.png" widht="400" height="300">
+</a>
+<a align='right'>
+  <img src="https://user-images.githubusercontent.com/81574795/180950896-cf765c19-7016-4598-8b9b-71b86fec8a95.png" widht="400" height="300">
+</a>
+
+  
+  
   <img src="https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white"></a><br>
   #### 캐싱 전략
       SNS 서비스 특성상 많은 유저가 해당 게시글을 조회할 것으로 판단하였습니다.
