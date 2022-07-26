@@ -1,4 +1,5 @@
 import socket
+from elasticsearch import Elasticsearch
 
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
@@ -10,6 +11,7 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
 )
 
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 from django.db.models import Q, F, Count
 from django.shortcuts import get_object_or_404
@@ -66,6 +68,16 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
                 '-article_liked_user'
             ]
 
+            # elasticsearch
+            elasticsearch = Elasticsearch(
+                settings.ELASTIC_HOST, http_auth=(settings.ELASTIC_ID, settings.ELASTIC_PW), )
+
+            elastic_sql = f"""
+                SELECT id
+                FROM sns
+                WHERE 1 = 1
+                """
+
             condition = Q()
             if hashtags:    # 입력받은 해시태그 파라미터가 있다면,
                 condition.add(
@@ -78,6 +90,16 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
                     Q(content__icontains=search),
                     Q.OR
                 )
+                elastic_sql += f"""
+                AND
+                (
+                    MATCH(title_nori, '{search})
+                    OR
+                    MATCH(content_nori, '{search}
+                )
+                """
+                elasticsearch.sql.query(body={"query": elastic_sql})
+
             if orderby in set_order_by:
                 queryset = Article.objects.filter(condition).order_by(orderby).distinct()
 
@@ -207,8 +229,6 @@ class ArticleRestoreViewSet(mixins.ListModelMixin,
         article.restore()
 
         return Response(status=status.HTTP_200_OK)
-
-
 
 
 
