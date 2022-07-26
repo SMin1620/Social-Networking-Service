@@ -48,6 +48,11 @@
  <br><br>
   </div> 
   
+  
+# ERD
+![image](https://user-images.githubusercontent.com/81574795/180919660-692e6187-ed0a-4b64-93d0-8ae20e6fdc53.png)
+
+  
 # 💻 요구사항
 ### 필수 기능
   - 유저 관리 
