@@ -89,6 +89,8 @@
         - 사용자가 직접 정보를 보는 데이터 포함, 권한 부여 가능 필드도 추가
       - 유저의 정보를 수정할 수 있습니다.
         - 사용자가 직접 정보를 보는 데이터 포함, 권한 부여 수정 가능
+      - 유저끼리 팔로우, 언팔로우를 할 수 있습니다.
+
         
    - 게시글 관리 -> 추가 기능
       - 조회수 기능
@@ -126,21 +128,75 @@
 
 <br>
 
-### 🚥 개발 조건 
+## 🚥 개발 조건 
 
-  #### 🙆‍♂️ 필수사항  
+  ### 🙆‍♂️ 필수사항  
     - Python, Django
     - REST API 구현
     - 토큰을 이용한 인증 제어 방식
     - ordering, searching, filtering, pagination
     
-  #### 🔥 선택사항
+  #### Simple-JWT 라이브러리 사용
+       사용자 인증에 필요한 모든 정보는 토큰 자체에 포함하기 때문에 별도의 인증 저장소가 필요없다는 점과 
+       분산 마이크로 서비스 환경에서 중앙 집중식 인증 서버와 데이터베이스에 의존하지 않는 JWT 인증 방식을 선택했습니다. 
+       최근에는 django-rest-framework-jwt 라이브러리를 많이 사용하지 않는다고 한다.
+       또한 DRF 공식문서에 따르면 djangorestframework-simplejwt  라이브러리 사용을 권장하고 있어서 simple-jwt를 채택하였습니다.
+       
+  #### 소프트 딜리트
+       SofrDelete 모델을 추가하고, delete할 때 delete_date 현재 시간으로 갱신되고, restore(복원)할 때에는 delete_date는 None 값으로 갱신됩니다.
+  ```
+       class SoftDeleteManager(models.Manager):
+          use_for_related_fields = True
+
+          def get_queryset(self):
+              return super().get_queryset().filter(delete_date__isnull=True)
+
+
+       class DeleteManager(models.Manager):
+          use_for_related_fields = True
+
+          def get_queryset(self):
+              return super().get_queryset().filter(delete_date__isnull=False)
+              
+              .
+              .
+              .
+              
+        def delete(self, using=None, keep_parents=False):
+            self.delete_date = now()
+            self.save(update_fields=['delete_date'])
+
+        def restore(self):
+            self.delete_date = None
+            self.save(update_fields=['delete_date'])
+  ```
+
+  ### 🔥 추가사항
+  #### 조회수
+      조회수 반영에는 로그인 하지 않은 사용자도 포함되어야 하기 때문에 데어터가 매우 많을 것으로 예상하여서, 기본적으로 redis 캐싱 전략을 사용하였습니다.
+      조회수는 두 가지로 나눠지는데 로그인한 사용자(인가된 사용자)와 로그인 하지 않은 사용자(인가되지 않은 사용자)로 나누어서 개발하였습니다.
+      인가된 사용자는 기본적으로 인증된 id 값을 캐시메모리에 저장해서 확인하는 절차를 선택하였고, 
+      인가되지 않은 사용자는 해당 고유의 PC ip를 이용해서 조회수에 반영되도록 하였습니다.
+      또한, 무분별한 조회수 올리는 것을 방지하기 위해서 expire time(TTL)을 두어 10분뒤에 다시 게시글에 접속하면 조회수가 오르도록 구현하였습니다.
+  #### 팔로우
+      각 사용자는 다른 사용자와 팔로우 관계를 맺을 수 있습니다. 
+      다른 사람을 팔로우 할 때에는, 먼저 자신이 그 사람을 팔로우 했는지부터 여부를 확인하고 진행하게 됩니다.
+      언팔로우도 마찬가지로 같은 로직으로 구현되었습니다.
+     
+  #### 댓글 및 대댓글
+      아래의 방식으로 댓글과 대댓글을 구현하였습니다.
+  <img width="400" height="200" src="https://user-images.githubusercontent.com/81574795/180916409-c3b03b29-6597-41aa-8c1e-2b0a88fa0c03.png">
+   
+    
+  
+  ### 🔥 선택사항
   <img src="https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white"></a><br>
   #### 캐싱 전략
       SNS 서비스 특성상 많은 유저가 해당 게시글을 조회할 것으로 판단하였습니다.
       db의 접속을 줄이고 캐시 메모리를 이용해서 성능적인 부분을 고려해서 캐싱 전략을 사용했습니다.
       Redis Cache를 이용해서 key "(article_id) : value (user_id)"의 형태로 캐시 메모리에 저장한 다음, 
       같은 유저가 같은 게시글을 조회했을 때 의도적으로 조회수 카운트 상승을 방지하였습니다.
+      
       
   #### 채팅
      미구현
