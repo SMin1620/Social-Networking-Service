@@ -119,14 +119,14 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         return ArticleListCreateSerializer
 
-    # @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
-    # def list(self, request, *args, **kwargs):
-    #     """
-    #     게시글 목록 조회
-    #     사용자 전용
-    #     스웨거 데코레이터를 이용하기 위해서 선언함
-    #     """
-    #     return super().list(request, *args, **kwargs)
+    @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
+    def list(self, request, *args, **kwargs):
+        """
+        게시글 목록 조회
+        사용자 전용
+        스웨거 데코레이터를 이용하기 위해서 선언함
+        """
+        return super().list(request, *args, **kwargs)
 
     @transaction.atomic()
     def create(self, request, *args, **kwargs):
