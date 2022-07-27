@@ -47,6 +47,8 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
             'hashtags',
             'hits',
             'like_count',
+            'created_at',
+            'updated_at',
             'delete_date',
             'comments',
         ]

@@ -13,7 +13,7 @@ from rest_framework.permissions import (
 
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
-from django.db.models import Q, F, Count
+from django.db.models import Q, F, Count, Case, When
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from django.db import transaction
@@ -54,19 +54,9 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         if self.action == 'list':
-            hashtag = self.request.GET.get('hashtags', '')             # 해시태그 입력
+            hashtags = self.request.GET.get('hashtags', '')             # 해시태그 입력
             search = self.request.GET.get('search', '')                # 검색 단어 입력
-            orderby = self.request.GET.get('orderby', '-created_at')   # 정렬 단어 입력
-
-            hashtags = hashtag and hashtag.split(' ') and hashtag.split(',')    # 해시태그 필터
-            set_order_by = [
-                'created_at',
-                '-created_at',
-                'hits',
-                '-hits',
-                'article_liked_user',
-                '-article_liked_user'
-            ]
+            orderby = self.request.GET.get('orderby', 'created_at')   # 정렬 단어 입력
 
             # elasticsearch
             elasticsearch = Elasticsearch(
@@ -75,34 +65,52 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
             elastic_sql = f"""
                 SELECT id
                 FROM sns
-                WHERE 1 = 1
+                WHERE 1=1
                 """
 
             condition = Q()
             if hashtags:    # 입력받은 해시태그 파라미터가 있다면,
-                condition.add(
-                    Q(tags__name__in=hashtags),
-                    Q.OR
-                )
-            if search:
-                condition.add(
-                    Q(title__icontains=search) |
-                    Q(content__icontains=search),
-                    Q.OR
-                )
+                # CASE 1 : django Q를 이용한 방식
+                # condition.add(
+                #     Q(tags__name__in=hashtags),
+                #     Q.OR
+                # )
+                # CASE 2 : 엘라스틱 서치 쿼리를 이용한 방식
                 elastic_sql += f"""
                 AND
                 (
-                    MATCH(title_nori, '{search})
-                    OR
-                    MATCH(content_nori, '{search}
+                    MATCH(hashtags_nori, '{hashtags}')  
                 )
                 """
-                elasticsearch.sql.query(body={"query": elastic_sql})
 
-            if orderby in set_order_by:
-                queryset = Article.objects.filter(condition).order_by(orderby).distinct()
+            if search:
+                # CASE 1 : django Q를 이용한 방식
+                # condition.add(
+                #     Q(title__icontains=search) |
+                #     Q(content__icontains=search),
+                #     Q.OR
+                # )
 
+                # CASE 2 : 엘라스틱 서치 쿼리를 이용한 방식
+                elastic_sql += f"""
+                AND
+                (
+                    MATCH(title_nori, '{search}')
+                    OR
+                    MATCH(content_nori, '{search}')
+                )
+                """
+
+            if orderby:
+                # CASE : 엘라스틱 서치 쿼리를 이용한 방식
+                elastic_sql += f"""ORDER BY {orderby}"""
+
+            response = elasticsearch.sql.query(body={"query": elastic_sql})
+            article_ids = [row[0] for row in response['rows']]
+
+            order = Case(*[When(id=id, then=art) for art, id in enumerate(article_ids)])
+
+            queryset = Article.objects.filter(id__in=article_ids).order_by(order)
             return queryset
 
         else:
@@ -111,14 +119,14 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
     def get_serializer_class(self):
         return ArticleListCreateSerializer
 
-    @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
-    def list(self, request, *args, **kwargs):
-        """
-        게시글 목록 조회
-        사용자 전용
-        스웨거 데코레이터를 이용하기 위해서 선언함
-        """
-        return super().list(request, *args, **kwargs)
+    # @swagger_auto_schema(manual_parameters=[param_hashtags, param_search, param_orderby])
+    # def list(self, request, *args, **kwargs):
+    #     """
+    #     게시글 목록 조회
+    #     사용자 전용
+    #     스웨거 데코레이터를 이용하기 위해서 선언함
+    #     """
+    #     return super().list(request, *args, **kwargs)
 
     @transaction.atomic()
     def create(self, request, *args, **kwargs):
