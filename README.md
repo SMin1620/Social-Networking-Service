@@ -205,57 +205,104 @@
   <img src="https://user-images.githubusercontent.com/81574795/180950896-cf765c19-7016-4598-8b9b-71b86fec8a95.png" widht="400" height="300">
 </a>
 
+  <br>
   
-  
-  <img src="https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white"></a><br>
   #### 캐싱 전략
-      SNS 서비스 특성상 많은 유저가 해당 게시글을 조회할 것으로 판단하였습니다.
-      db의 접속을 줄이고 캐시 메모리를 이용해서 성능적인 부분을 고려해서 캐싱 전략을 사용했습니다.
-      Redis Cache를 이용해서 key "(article_id) : value (user_id)"의 형태로 캐시 메모리에 저장한 다음, 
-      같은 유저가 같은 게시글을 조회했을 때 의도적으로 조회수 카운트 상승을 방지하였습니다.
+  <img src="https://img.shields.io/badge/redis-%23DD0031.svg?style=for-the-badge&logo=redis&logoColor=white"></a>
+  ```
+    SNS 서비스 특성상 많은 유저가 해당 게시글을 조회할 것으로 판단하였습니다.
+    db의 접속을 줄이고 캐시 메모리를 이용해서 성능적인 부분을 고려해서 캐싱 전략을 사용했습니다.
+    Redis Cache를 이용해서 key "(article_id) : value (user_id)"의 형태로 캐시 메모리에 저장한 다음, 
+    같은 유저가 같은 게시글을 조회했을 때 의도적으로 조회수 카운트 상승을 방지하였습니다.
+  ```
       
+  <br>
       
   #### 채팅
      미구현
-     
+  
+  <br>
+  
   #### 검색 엔진
+  <img src="https://img.shields.io/badge/-ElasticSearch-005571?style=for-the-badge&logo=elasticsearch"></a>
   ```
-  검색 엔진으로 엘라스틱 서치를 사용하였습니다. 인덱스 색인 및 매핑 작업으로 하고 title, content, hashtags를 검색 가능하도록 설정합니다.
-  그리고 로그 스태시로 mysql과 연동하게 하고, 키바나로 검색 단어를 분석 및 시각화 작업을 합니다.
+    통상 SNS 서비스의 특징으로는 수많은 데이터를 내포하고 있기 때문에 모든 이벤트를 DB에서 처리하기에는 성능적인 이슈가 생길 수 있다고 판단하였습니다.
+    그래서 엘라스틱 서치 검색엔진을 통해서 필요한 데이터만 넣어 데이터 공간 및 CPU 사용량, 네트워크 트래픽을 줄여서 성능을 더욱 더 향상시키기 위해 사용하였습니다.
+    엘라스틱 서치를 통해서 인덱스 색인 및 매핑 작업으로 하고 title, content, hashtags를 검색 가능하도록 설정합니다.
+    그리고 로그 스태시로 mysql과 연동하게 하고, 키바나로 검색 단어를 분석 및 시각화 작업을 합니다.
   ```
-  ```
-  {
-  "properties": {
-    "id": {
-      "type": "long"
-    },
-    "title": {
-      "type": "keyword",
-      "copy_to": ["title_nori"]
-    },
-    "title_nori": {
-      "type": "text",
-      "analyzer": "nori_analyzer"
-    },
-    "content": {
-      "type": "keyword",
-      "copy_to": ["content_nori"]
-    },
-    "content_nori": {
-      "type": "text",
-      "analyzer": "nori_analyzer"
-    },
-    "hashtags": {
-      "type": "keyword",
-      "copy_to": ["hashtags_nori"]
-    },
-    "hashtags_nori": {
-      "type": "text",
-      "analyzer": "nori_analyzer"
-    }
-  }
-```
-<img width="1423" alt="image" src="https://user-images.githubusercontent.com/81574795/180952148-80348f11-d0f6-4fdd-9b52-c87eba1bbd9e.png">
+  <br>
+  
+  - 애널라이저 - Analyzer ( tokenizer + filter )
+    ```
+      tokenizer는 입력된 데이터를 토큰으로 분리하는 작업으로 하고, filter는 tokenizer는로 분리된 토큰들에 필터를 적용하는 역할을 합니다.
+      즉, 각 단어에 대해 필터를 걸어서 검색을 할 수 있도록 해주는 세팅입니다.
+    ```
+    ```
+      "analysis": {
+          "analyzer": {
+            "nori_analyzer": {
+              "type": "custom",
+              "tokenizer": "nori_tokenizer",
+              "filter": "nori_filter"
+            }
+          },
+          "tokenizer": {
+            "nori_tokenizer": {
+              "type": "nori_tokenizer",
+              "decompound_mode": "mixed",
+              "user_dictionary": "dict.txt"
+            }
+          },
+          "filter": {
+            "nori_filter": {
+              "type": "nori_part_of_speech",
+              "stoptags": [
+                "E", "IC", "J", "MAG", "MAJ", "MM", "SP", "SSC", "SSO", "SC", "SE", "XPN", "XSA", "XSN", "XSV", "UNA", "NA", "VSV"
+              ]
+            }
+          }
+    ```
+  <br>
+  
+  - 인덱스 타입 설정 (매핑 mappings)
+    ```
+      PUT /sns/_mappings
+      {
+        "properties": {
+          "id": {
+            "type": "long"
+          },
+          "title": {
+            "type": "keyword",
+            "copy_to": ["title_nori"]
+          },
+          "title_nori": {
+            "type": "text",
+            "analyzer": "nori_analyzer"
+          },
+          "content": {
+            "type": "keyword",
+            "copy_to": ["content_nori"]
+          },
+          "content_nori": {
+            "type": "text",
+            "analyzer": "nori_analyzer"
+          },
+          "hashtags": {
+            "type": "keyword",
+            "copy_to": ["hashtags_nori"]
+          },
+          "hashtags_nori": {
+            "type": "text",
+            "analyzer": "nori_analyzer"
+          },
+          "hits": {
+            "type": "integer"
+          }
+        }
+      }
+    ```
 
      
 
