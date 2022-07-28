@@ -20,4 +20,7 @@ class IsOwnerOrReadOnly(BasePermission):
                 return obj.id == request.user.id
             return False
         else:
+            # 인가되지 않은 사용자도 게시글 확인 가능
+            if request.method in SAFE_METHODS:
+                return True
             return False

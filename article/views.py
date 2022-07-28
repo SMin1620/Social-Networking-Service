@@ -164,13 +164,15 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         expire_time = 600  # 조회수 설정 시간 10분
 
         user = request.user.id
-        if user is None:
+        if user is None:    # 인가되지 않은 사용자 (게스트)
             user = socket.gethostbyname(socket.gethostname())
 
-        cache_value = cache.get(f'user-{user}', '_')         # 캐싱을 이용해서 조회수 기능 구현
+        # 캐싱을 이용해서 조회수 기능 구현
+        cache_value = cache.get(f'user-{user}', '_')
         response = Response(status=status.HTTP_200_OK)
 
-        if f'_{pk}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
+        # 인가된 사용자의 조회수 증가
+        if f'_{pk}_' not in cache_value:
             cache_value += f'{pk}_'
             cache.set(f'user-{user}', cache_value, expire_time)
             article.hits += 1
