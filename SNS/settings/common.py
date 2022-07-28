@@ -81,6 +81,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'SNS.urls'
 
+ELASTIC_HOST = os.environ.get("ELASTIC_HOST", "http://3.39.181.85:9200")
+ELASTIC_ID = os.environ.get('ELASTIC_ID', 'elastic')
+ELASTIC_PW = os.environ.get('ELASTIC_PW', 'elasticpassword')
+
+
 
 # rest framework authentication
 REST_FRAMEWORK = {
@@ -158,7 +163,7 @@ DATABASES = {
         'NAME': 'SNS',
         'USER': 'root',
         'PASSWORD': '1234',
-        'HOST': '127.0.0.1',
+        'HOST': '3.39.181.85',
         'PORT': '3306',
         'OPTIONS': {
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
@@ -171,7 +176,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379",
+        "LOCATION": "redis://redis:6379",
     }
 }
 
@@ -212,6 +217,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field

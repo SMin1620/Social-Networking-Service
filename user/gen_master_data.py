@@ -2,9 +2,6 @@ from django.contrib.auth import get_user_model
 
 from user.models import User
 
-
-User = get_user_model()
-
 # 유저 더미데이터
 def gen_master(apps, schema_editor):
     """

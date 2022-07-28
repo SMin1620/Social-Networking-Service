@@ -1,4 +1,5 @@
 import socket
+from elasticsearch import Elasticsearch
 
 from rest_framework import mixins, viewsets, status
 from rest_framework.response import Response
@@ -10,8 +11,9 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
 )
 
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
-from django.db.models import Q, F, Count
+from django.db.models import Q, F, Count, Case, When
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 from django.db import transaction
@@ -52,35 +54,63 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
 
     def get_queryset(self):
         if self.action == 'list':
-            hashtag = self.request.GET.get('hashtags', '')             # 해시태그 입력
+            hashtags = self.request.GET.get('hashtags', '')             # 해시태그 입력
             search = self.request.GET.get('search', '')                # 검색 단어 입력
-            orderby = self.request.GET.get('orderby', '-created_at')   # 정렬 단어 입력
+            orderby = self.request.GET.get('orderby', 'created_at')   # 정렬 단어 입력
 
-            hashtags = hashtag and hashtag.split(' ') and hashtag.split(',')    # 해시태그 필터
-            set_order_by = [
-                'created_at',
-                '-created_at',
-                'hits',
-                '-hits',
-                'article_liked_user',
-                '-article_liked_user'
-            ]
+            # elasticsearch
+            elasticsearch = Elasticsearch(
+                settings.ELASTIC_HOST, http_auth=(settings.ELASTIC_ID, settings.ELASTIC_PW), )
+
+            elastic_sql = f"""
+                SELECT id
+                FROM sns
+                WHERE 1=1
+                """
 
             condition = Q()
             if hashtags:    # 입력받은 해시태그 파라미터가 있다면,
-                condition.add(
-                    Q(tags__name__in=hashtags),
-                    Q.OR
+                # CASE 1 : django Q를 이용한 방식
+                # condition.add(
+                #     Q(tags__name__in=hashtags),
+                #     Q.OR
+                # )
+                # CASE 2 : 엘라스틱 서치 쿼리를 이용한 방식
+                elastic_sql += f"""
+                AND
+                (
+                    MATCH(hashtags_nori, '{hashtags}')  
                 )
-            if search:
-                condition.add(
-                    Q(title__icontains=search) |
-                    Q(content__icontains=search),
-                    Q.OR
-                )
-            if orderby in set_order_by:
-                queryset = Article.objects.filter(condition).order_by(orderby).distinct()
+                """
 
+            if search:
+                # CASE 1 : django Q를 이용한 방식
+                # condition.add(
+                #     Q(title__icontains=search) |
+                #     Q(content__icontains=search),
+                #     Q.OR
+                # )
+
+                # CASE 2 : 엘라스틱 서치 쿼리를 이용한 방식
+                elastic_sql += f"""
+                AND
+                (
+                    MATCH(title_nori, '{search}')
+                    OR
+                    MATCH(content_nori, '{search}')
+                )
+                """
+
+            if orderby:
+                # CASE : 엘라스틱 서치 쿼리를 이용한 방식
+                elastic_sql += f"""ORDER BY {orderby}"""
+
+            response = elasticsearch.sql.query(body={"query": elastic_sql})
+            article_ids = [row[0] for row in response['rows']]
+
+            order = Case(*[When(id=id, then=art) for art, id in enumerate(article_ids)])
+
+            queryset = Article.objects.filter(id__in=article_ids).order_by(order)
             return queryset
 
         else:
@@ -134,13 +164,15 @@ class ArticleDetailUpdateDeleteViewSet(mixins.RetrieveModelMixin,
         expire_time = 600  # 조회수 설정 시간 10분
 
         user = request.user.id
-        if user is None:
+        if user is None:    # 인가되지 않은 사용자 (게스트)
             user = socket.gethostbyname(socket.gethostname())
 
-        cache_value = cache.get(f'user-{user}', '_')         # 캐싱을 이용해서 조회수 기능 구현
+        # 캐싱을 이용해서 조회수 기능 구현
+        cache_value = cache.get(f'user-{user}', '_')
         response = Response(status=status.HTTP_200_OK)
 
-        if f'_{pk}_' not in cache_value:                 # 인가된 사용자의 조회수 증가
+        # 인가된 사용자의 조회수 증가
+        if f'_{pk}_' not in cache_value:
             cache_value += f'{pk}_'
             cache.set(f'user-{user}', cache_value, expire_time)
             article.hits += 1
@@ -207,8 +239,6 @@ class ArticleRestoreViewSet(mixins.ListModelMixin,
         article.restore()
 
         return Response(status=status.HTTP_200_OK)
-
-
 
 
 
