@@ -20,17 +20,6 @@ services:
       - db
     restart: always
 
-  db:
-    image: mysql:5.7
-    container_name: db
-    platform: linux/amd64
-    volumes:
-      - ./:/app/server/mysql/
-    env_file:
-      - ./.env.db
-    ports:
-      - 3306:3306
-
   redis:
     container_name: redis
     image: redis
@@ -43,6 +32,6 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
     ports:
-      - 80:80
+      - 81:81
     depends_on:
       - web
