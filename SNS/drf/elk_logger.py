@@ -9,6 +9,6 @@ def create_logger(logger_name):
         return logger
 
     logger.setLevel(logging.INFO)
-    logger.addHandler(logstash.TCPLogstashHandler('localhost', 5000, version=1))  #
+    logger.addHandler(logstash.TCPLogstashHandler('3.39.181.85', 8000, version=1))  #
 
     return logger
