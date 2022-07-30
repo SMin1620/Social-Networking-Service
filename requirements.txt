@@ -4,7 +4,6 @@ attrs==21.4.0
 autobahn==22.6.1
 Automat==20.2.0
 bcrypt==3.2.2
-certifi @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_83242e7e-f82d-4a71-8ef2-9d71d212d249gu_wxmeq/croots/recipe/certifi_1655968827803/work/certifi
 cffi==1.15.1
 channels==3.0.5
 charset-normalizer==2.1.0
