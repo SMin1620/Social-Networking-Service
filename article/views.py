@@ -35,6 +35,7 @@ from SNS.drf.swagger import (
 )
 from SNS.drf.pagination import ArticlePageNumberPagination
 from SNS.drf.permissions import IsOwnerOrReadOnly
+from SNS.drf import elk_logger
 
 
 # Create your views here.
@@ -111,6 +112,10 @@ class ArticleListCreateViewSet(mixins.ListModelMixin,
             order = Case(*[When(id=id, then=art) for art, id in enumerate(article_ids)])
 
             queryset = Article.objects.filter(id__in=article_ids).order_by(order)
+
+            if queryset:
+                logger = elk_logger.create_logger('elk-test-search-log')
+                logger.info(f'{search} searching')
             return queryset
 
         else:
